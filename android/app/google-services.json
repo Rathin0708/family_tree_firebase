@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "417736739928",
+    "project_id": "family-tree-project-fabf2",
+    "storage_bucket": "family-tree-project-fabf2.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:417736739928:android:6fed9ef8ca86ec12ea4e2d",
+        "android_client_info": {
+          "package_name": "com.example.family_tree_firebase"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAYCqUDlR0e5x76oA2kG5bmwdVL7PtRNo8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
