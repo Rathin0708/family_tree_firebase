@@ -88,11 +88,11 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
     final otp = _otpControllers.map((controller) => controller.text).join();
     if (otp.length == 6) {
       context.read<AuthBloc>().add(
-            VerifyOtpRequested(
-              verificationId: widget.verificationId,
-              smsCode: otp,
-            ),
-          );
+        VerifyOtpRequested(
+          verificationId: widget.verificationId,
+          smsCode: otp,
+        ),
+      );
     }
   }
 
@@ -123,22 +123,27 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
       ),
       body: BlocConsumer<AuthBloc, AuthState>(
         listener: (context, state) {
-          if (state.status == AuthStatus.verificationSuccessful) {
-            // Navigate to success screen or home screen
+          if (state.status == AuthStatus.authenticated) {
+            // Navigate to success screen which will then handle going to home
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(
-                builder: (context) => const SuccessScreen(
+                builder: (context) => SuccessScreen(
                   title: 'Verification Successful!',
                   message: 'Your account has been successfully verified.',
                   isRegistration: true,
+                  buttonText: 'CONTINUE TO APP',
                 ),
               ),
             );
-          } else if (state.status == AuthStatus.error) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.error ?? 'Verification failed')),
-            );
+          } else if (state.status == AuthStatus.verificationFailed || 
+                    state.status == AuthStatus.error) {
+            // Show error message if verification fails
+            if (state.error != null) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(state.error!)),
+              );
+            }
           }
         },
         builder: (context, state) {

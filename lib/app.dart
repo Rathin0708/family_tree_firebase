@@ -29,9 +29,15 @@ class App extends StatelessWidget {
             );
           }
 
-          // Show login screen if not authenticated
+          // Show registration screen first for new users
           if (state.status == AuthStatus.unauthenticated) {
-            return const LoginScreen();
+            // Check if it's a new user (not coming back from login)
+            final isNewUser = ModalRoute.of(context)?.settings.arguments as bool? ?? true;
+            if (isNewUser) {
+              return const RegisterScreen();
+            } else {
+              return const LoginScreen();
+            }
           }
 
           // Show home screen if authenticated
@@ -83,7 +89,24 @@ class App extends StatelessWidget {
             ),
           );
         }
+        // Handle home route
+        if (settings.name == '/home') {
+          return MaterialPageRoute(builder: (context) => const HomeScreen());
+        }
         return null;
+      },
+      onUnknownRoute: (settings) {
+        // Handle unknown routes by redirecting to home or login
+        return MaterialPageRoute(
+          builder: (context) => BlocBuilder<AuthBloc, AuthState>(
+            builder: (context, state) {
+              if (state.status == AuthStatus.authenticated) {
+                return const HomeScreen();
+              }
+              return const LoginScreen();
+            },
+          ),
+        );
       },
     );
   }

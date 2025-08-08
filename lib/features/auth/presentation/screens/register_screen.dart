@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../bloc/auth_bloc.dart';
+import 'login_screen.dart';
+import 'otp_verification_screen.dart';
+import 'success_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({Key? key}) : super(key: key);
@@ -48,18 +51,50 @@ class _RegisterScreenState extends State<RegisterScreen> {
         _currentStep--;
       });
     } else {
-      Navigator.pop(context);
+      // If it's the first time (no arguments), just pop
+      // Otherwise, navigate back to login with flag
+      final isFirstTime = ModalRoute.of(context)?.settings.arguments as bool? ?? true;
+      if (isFirstTime) {
+        Navigator.pop(context);
+      } else {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const LoginScreen(),
+          ),
+        );
+      }
     }
   }
 
   void _onRegister() {
     if (_formKey.currentState?.validate() ?? false) {
+      // Validate password requirements
+      final password = _passwordController.text.trim();
+      if (password.length < 6 || 
+          !password.contains(RegExp(r'[A-Z]')) || 
+          !password.contains(RegExp(r'[0-9]'))) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please ensure your password meets all requirements')),
+        );
+        return;
+      }
+
+      // Validate password match
+      if (password != _confirmPasswordController.text.trim()) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Passwords do not match')),
+        );
+        return;
+      }
+
+      // All validations passed, proceed with registration
       context.read<AuthBloc>().add(
             RegisterRequested(
               name: _nameController.text.trim(),
               email: _emailController.text.trim(),
               phoneNumber: _phoneController.text.trim(),
-              password: _passwordController.text.trim(),
+              password: password,
             ),
           );
     }
@@ -67,33 +102,58 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF333333)),
-          onPressed: _onPreviousStep,
-        ),
-        title: Text(
-          'Create Account',
-          style: GoogleFonts.poppins(
-            color: const Color(0xFF333333),
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-      ),
-      body: BlocListener<AuthBloc, AuthState>(
-        listener: (context, state) {
-          if (state.status == AuthStatus.authenticated) {
-            // Navigate to home screen or verification screen
-          } else if (state.status == AuthStatus.error) {
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state.status == AuthStatus.otpSent) {
+          // Navigate to OTP verification screen for phone verification
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => OtpVerificationScreen(
+                verificationId: state.verificationId!,
+                phoneNumber: _phoneController.text.trim(),
+                isRegistration: true,
+              ),
+            ),
+          );
+        } else if (state.status == AuthStatus.authenticated) {
+          // Navigate to success screen after successful verification
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const SuccessScreen(
+                title: 'Registration Successful!',
+                message: 'Your account has been created and verified successfully.',
+                isRegistration: true,
+              ),
+            ),
+          );
+        } else if (state.status == AuthStatus.error) {
+          // Show error message if registration fails
+          if (state.error != null) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.error ?? 'An error occurred')),
+              SnackBar(content: Text(state.error!)),
             );
           }
-        },
-        child: SingleChildScrollView(
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF333333)),
+            onPressed: _onPreviousStep,
+          ),
+          title: Text(
+            'Create Account',
+            style: GoogleFonts.poppins(
+              color: const Color(0xFF333333),
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+        ),
+        body: SingleChildScrollView(
           child: Column(
             children: [
               // Progress Indicator
@@ -380,6 +440,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
             }
             if (value.length < 6) {
               return 'Password must be at least 6 characters';
+            }
+            if (!value.contains(RegExp(r'[A-Z]'))) {
+              return 'Password must contain at least one uppercase letter';
+            }
+            if (!value.contains(RegExp(r'[0-9]'))) {
+              return 'Password must contain at least one number';
             }
             return null;
           },

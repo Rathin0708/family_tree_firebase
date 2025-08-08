@@ -3,7 +3,7 @@ plugins {
     id("kotlin-android")
     id("com.google.gms.google-services")  // Google Services plugin
     id("dev.flutter.flutter-gradle-plugin")
-    id("com.google.firebase.crashlytics") // Optional: For Firebase Crashlytics
+    // Firebase Crashlytics is applied through the Flutter Gradle plugin
 }
 
 android {

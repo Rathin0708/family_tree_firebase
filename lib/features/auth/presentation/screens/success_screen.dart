@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:family_tree_firebase/features/home/presentation/screens/home_screen.dart';
 
 class SuccessScreen extends StatelessWidget {
   final String title;
@@ -77,16 +78,11 @@ class SuccessScreen extends StatelessWidget {
                 height: 56,
                 child: ElevatedButton(
                   onPressed: onPressed ?? () {
-                    if (isRegistration) {
-                      // Navigate to home screen after registration
-                      Navigator.pushNamedAndRemoveUntil(
-                        context,
-                        '/home',
-                        (route) => false,
-                      );
-                    } else {
-                      Navigator.pop(context);
-                    }
+                    // Navigate to home screen and remove all previous routes
+                    Navigator.of(context).pushAndRemoveUntil(
+                      MaterialPageRoute(builder: (context) => const HomeScreen()),
+                      (route) => false,
+                    );
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFFF6B35),
@@ -114,9 +110,9 @@ class SuccessScreen extends StatelessWidget {
                   height: 56,
                   child: OutlinedButton(
                     onPressed: () {
-                      Navigator.pushNamedAndRemoveUntil(
-                        context,
-                        '/home',
+                      // Navigate to home screen and remove all previous routes
+                      Navigator.of(context).pushAndRemoveUntil(
+                        MaterialPageRoute(builder: (context) => const HomeScreen()),
                         (route) => false,
                       );
                     },
