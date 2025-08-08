@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:family_tree_firebase/features/auth/domain/models/user_model.dart';
 
 // Auth Status
 enum AuthStatus {
@@ -225,6 +227,23 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       // Update user profile with display name
       await credential.user?.updateDisplayName(event.name);
       
+      // Create user document in Firestore
+      if (credential.user != null) {
+        final user = UserModel(
+          id: credential.user!.uid,
+          name: event.name,
+          phoneNumber: event.phoneNumber,
+          email: event.email,
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        );
+        
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(credential.user!.uid)
+            .set(user.toJson());
+      }
+      
       // Send OTP for phone verification
       emit(state.copyWith(
         status: AuthStatus.otpSent,
@@ -389,6 +408,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       if (event.smsCode == '000000') {
         // If user is already signed in (registration flow), just update the state
         if (_auth.currentUser != null) {
+          // Ensure user document exists
+          await _ensureUserDocumentExists(_auth.currentUser!);
+          
           emit(state.copyWith(
             status: AuthStatus.authenticated,
             user: _auth.currentUser,
@@ -401,6 +423,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
             smsCode: '000000',
           );
           final userCredential = await _auth.signInWithCredential(testCredential);
+          
+          // Ensure user document exists
+          if (userCredential.user != null) {
+            await _ensureUserDocumentExists(userCredential.user!);
+          }
+          
           emit(state.copyWith(
             status: AuthStatus.authenticated,
             user: userCredential.user,
@@ -419,6 +447,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       // If user is already signed in (registration flow), link the phone credential
       if (_auth.currentUser != null) {
         await _auth.currentUser!.linkWithCredential(credential);
+        
+        // Ensure user document exists
+        await _ensureUserDocumentExists(_auth.currentUser!);
+        
         emit(state.copyWith(
           status: AuthStatus.authenticated,
           user: _auth.currentUser,
@@ -427,6 +459,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         // For login flow, sign in with the credential
         final userCredential = await _auth.signInWithCredential(credential);
         if (userCredential.user != null) {
+          // Ensure user document exists
+          await _ensureUserDocumentExists(userCredential.user!);
+          
           emit(state.copyWith(
             status: AuthStatus.authenticated,
             user: userCredential.user,
@@ -467,6 +502,32 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         status: AuthStatus.error,
         error: 'Failed to sign out. Please try again.',
       ));
+    }
+  }
+
+  // Helper method to ensure a user document exists in Firestore
+  Future<void> _ensureUserDocumentExists(User user) async {
+    final userDoc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .get();
+
+    if (!userDoc.exists) {
+      // Create a new user document if it doesn't exist
+      final newUser = UserModel(
+        id: user.uid,
+        name: user.displayName ?? 'New User',
+        phoneNumber: user.phoneNumber ?? '',
+        email: user.email,
+        profileImageUrl: user.photoURL,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+      
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .set(newUser.toJson());
     }
   }
 
