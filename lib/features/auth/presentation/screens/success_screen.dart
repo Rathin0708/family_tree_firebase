@@ -1,19 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:lottie/lottie.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class SuccessScreen extends StatelessWidget {
   final String title;
   final String message;
-  final String nextRoute;
-  final Map<String, dynamic>? arguments;
+  final bool isRegistration;
+  final String? buttonText;
+  final VoidCallback? onPressed;
 
   const SuccessScreen({
-    super.key,
+    Key? key,
     required this.title,
     required this.message,
-    required this.nextRoute,
-    this.arguments,
-  });
+    this.isRegistration = false,
+    this.buttonText,
+    this.onPressed,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -24,24 +26,32 @@ class SuccessScreen extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Success animation
-              SizedBox(
-                width: 200,
-                height: 200,
-                child: Lottie.asset(
-                  'assets/animations/success_animation.json',
-                  fit: BoxFit.contain,
+              // Success Icon
+              Container(
+                width: 120,
+                height: 120,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE8F5E9),
+                  shape: BoxShape.circle,
+                ),
+                child: const Center(
+                  child: Icon(
+                    Icons.check_circle,
+                    color: Color(0xFF4CAF50),
+                    size: 80,
+                  ),
                 ),
               ),
               
-              const SizedBox(height: 32),
+              const SizedBox(height: 40),
               
               // Title
               Text(
                 title,
-                style: const TextStyle(
-                  fontSize: 28,
+                style: GoogleFonts.poppins(
+                  fontSize: 24,
                   fontWeight: FontWeight.bold,
+                  color: const Color(0xFF333333),
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -51,9 +61,9 @@ class SuccessScreen extends StatelessWidget {
               // Message
               Text(
                 message,
-                style: TextStyle(
+                style: GoogleFonts.poppins(
                   fontSize: 16,
-                  color: Colors.grey[600],
+                  color: const Color(0xFF666666),
                   height: 1.5,
                 ),
                 textAlign: TextAlign.center,
@@ -61,29 +71,72 @@ class SuccessScreen extends StatelessWidget {
               
               const SizedBox(height: 48),
               
-              // Continue button
+              // Continue Button
               SizedBox(
                 width: double.infinity,
+                height: 56,
                 child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pushReplacementNamed(
-                      context,
-                      nextRoute,
-                      arguments: arguments,
-                    );
+                  onPressed: onPressed ?? () {
+                    if (isRegistration) {
+                      // Navigate to home screen after registration
+                      Navigator.pushNamedAndRemoveUntil(
+                        context,
+                        '/home',
+                        (route) => false,
+                      );
+                    } else {
+                      Navigator.pop(context);
+                    }
                   },
                   style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    backgroundColor: const Color(0xFFFF6B35),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(12.0),
                     ),
+                    elevation: 0,
                   ),
-                  child: const Text(
-                    'Continue',
-                    style: TextStyle(fontSize: 16),
+                  child: Text(
+                    buttonText ?? (isRegistration ? 'GET STARTED' : 'DONE'),
+                    style: GoogleFonts.poppins(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ),
+              
+              if (!isRegistration) ...[  
+                const SizedBox(height: 16),
+                // Back to Home Button
+                SizedBox(
+                  width: double.infinity,
+                  height: 56,
+                  child: OutlinedButton(
+                    onPressed: () {
+                      Navigator.pushNamedAndRemoveUntil(
+                        context,
+                        '/home',
+                        (route) => false,
+                      );
+                    },
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: Color(0xFFFF6B35)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12.0),
+                      ),
+                    ),
+                    child: Text(
+                      'BACK TO HOME',
+                      style: GoogleFonts.poppins(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFFFF6B35),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ],
           ),
         ),
