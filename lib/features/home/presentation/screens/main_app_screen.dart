@@ -18,7 +18,7 @@ class _MainAppScreenState extends State<MainAppScreen> {
   final List<Widget> _screens = [
     const HomeScreen(),
     const GiftsScreen(),
-    const FamilyHomeScreen(),
+    const FamilyTreeScreen(),
     const SettingsScreen(),
   ];
 

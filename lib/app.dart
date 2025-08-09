@@ -157,45 +157,38 @@ class MyApp extends StatelessWidget {
             ),
           ),
         ),
-        home: BlocBuilder<AuthBloc, AuthState>(
-          builder: (context, state) {
-            // Show loading indicator while checking auth status
-            if (state.status == AuthStatus.initial) {
-              return const Scaffold(
-                body: Center(
-                  child: CircularProgressIndicator(
-                    color: Color(0xFFFF6B35),
-                  ),
-                ),
-              );
-            }
-
-            // Show registration screen first for new users
-            if (state.status == AuthStatus.unauthenticated) {
-              // Check if it's a new user (not coming back from login)
-              final isNewUser = ModalRoute.of(context)?.settings.arguments as bool? ?? true;
-              if (isNewUser) {
-                return const RegisterScreen();
-              } else {
-                return const LoginScreen();
-              }
-            }
-
-            // Show home screen if authenticated
-            if (state.status == AuthStatus.authenticated) {
-              return const main_app.MainAppScreen();
-            }
-
-            // Show loading indicator for other states
-            return const Scaffold(
-              body: Center(child: CircularProgressIndicator()),
-            );
-          },
-        ),
+        initialRoute: '/',
         routes: {
+          '/': (context) => BlocBuilder<AuthBloc, AuthState>(
+                builder: (context, state) {
+                  // Show loading indicator while checking auth status
+                  if (state.status == AuthStatus.initial) {
+                    return const Scaffold(
+                      body: Center(
+                        child: CircularProgressIndicator(
+                          color: Color(0xFFFF6B35),
+                        ),
+                      ),
+                    );
+                  }
+
+                  // Show login screen for unauthenticated users
+                  if (state.status == AuthStatus.unauthenticated) {
+                    return const LoginScreen();
+                  }
+
+                  // Show home screen if authenticated
+                  if (state.status == AuthStatus.authenticated) {
+                    return const main_app.MainAppScreen();
+                  }
+
+                  // Fallback to login screen for any other state
+                  return const LoginScreen();
+                },
+              ),
           '/login': (context) => const LoginScreen(),
           '/register': (context) => const RegisterScreen(),
-          '/home': (context) => const HomeScreen(),
+          '/home': (context) => const main_app.MainAppScreen(),
           '/otp-verification': (context) {
             final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>?;
             return OtpVerificationScreen(

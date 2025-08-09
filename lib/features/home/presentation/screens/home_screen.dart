@@ -37,20 +37,30 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _loadFamilyId() async {
     try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        if (mounted) setState(() => _familyId = '');
+        return;
+      }
+      
       final userDoc = await FirebaseFirestore.instance
           .collection('users')
-          .doc(FirebaseAuth.instance.currentUser?.uid)
+          .doc(user.uid)
           .get();
           
-      if (userDoc.exists && mounted) {
+      if (mounted) {
         setState(() {
-          _familyId = userDoc.data()?['familyId'];
+          _familyId = userDoc.data()?['familyId'] ?? '';
         });
       }
     } catch (e) {
       if (mounted) {
+        setState(() => _familyId = '');
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error loading family data: $e')),
+          const SnackBar(
+            content: Text('Error loading family data. Please try again.'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     }
@@ -67,13 +77,30 @@ class _HomeScreenState extends State<HomeScreen> {
     
     // Show loading indicator while checking family status
     if (_familyId == null) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
+      return Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFF6B35)),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Loading your family...',
+                style: GoogleFonts.poppins(
+                  fontSize: 16,
+                  color: Colors.grey[600],
+                ),
+              ),
+            ],
+          ),
+        ),
       );
     }
     
     // Show family creation prompt if user is authenticated but has no family
-    if (_familyId == null || _familyId!.isEmpty) {
+    if (_familyId!.isEmpty) {
       return _buildNoFamilyScreen();
     }
 

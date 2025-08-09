@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../bloc/auth_bloc.dart';
-import 'login_screen.dart';
 import 'otp_verification_screen.dart';
 import 'success_screen.dart';
 
@@ -51,19 +50,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
         _currentStep--;
       });
     } else {
-      // If it's the first time (no arguments), just pop
-      // Otherwise, navigate back to login with flag
-      final isFirstTime = ModalRoute.of(context)?.settings.arguments as bool? ?? true;
-      if (isFirstTime) {
-        Navigator.pop(context);
-      } else {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const LoginScreen(),
-          ),
-        );
-      }
+      // Navigate back to login using named route
+      Navigator.pushReplacementNamed(context, '/login');
     }
   }
 

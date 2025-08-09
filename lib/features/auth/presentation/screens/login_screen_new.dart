@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../bloc/auth_bloc.dart';
-import 'register_screen.dart';
 import 'otp_verification_screen.dart';
 import 'success_screen.dart';
 
@@ -378,23 +377,14 @@ class _LoginScreenState extends State<LoginScreen> {
                                 fontSize: 14,
                               ),
                             ),
-                            GestureDetector(
-                              onTap: () {
-                                Navigator.pushReplacement(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => const RegisterScreen(),
-                                  ),
-                                );
+                            TextButton(
+                              onPressed: () {
+                                Navigator.pushReplacementNamed(context, '/register');
                               },
-                              child: Text(
-                                'Sign Up',
-                                style: GoogleFonts.poppins(
-                                  color: const Color(0xFFFF6B35),
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                              style: TextButton.styleFrom(
+                                foregroundColor: const Color(0xFFFF6B35),
                               ),
+                              child: const Text('Create an account'),
                             ),
                           ],
                         ),

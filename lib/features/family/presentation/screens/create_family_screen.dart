@@ -1,9 +1,12 @@
+import 'dart:convert';
+import 'dart:math';
+import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:family_tree_firebase/features/family/data/services/family_service.dart';
 import 'package:family_tree_firebase/core/services/firebase_auth_service.dart';
+import 'package:family_tree_firebase/features/family/data/services/family_service.dart';
 import 'package:family_tree_firebase/core/service_locator.dart';
 import 'package:family_tree_firebase/features/family/presentation/screens/family_created_success_screen.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class CreateFamilyScreen extends StatefulWidget {
   const CreateFamilyScreen({Key? key}) : super(key: key);
@@ -30,18 +33,51 @@ class _CreateFamilyScreenState extends State<CreateFamilyScreen> {
   }
 
   void _generateInviteCode() {
-    // Generate a random 8-character alphanumeric code
-    setState(() {
-      _inviteCode = _generateRandomString(8);
-    });
+    // Generate a unique 6-character alphanumeric code using user's UID and timestamp
+    final user = _authService.getCurrentUser();
+    if (user != null) {
+      setState(() {
+        _inviteCode = _generateUniqueCode(user.uid, 6);
+      });
+    } else {
+      // Fallback to random code if user is not available
+      setState(() {
+        _inviteCode = _generateRandomString(6);
+      });
+    }
   }
 
+  String _generateUniqueCode(String userId, int length) {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Removed similar looking characters
+    
+    // Create a code that's consistent for this user but hard to guess
+    final timestamp = DateTime.now().millisecondsSinceEpoch;
+    final uniqueSeed = '${userId}_$timestamp';
+    final hash = _generateHash(uniqueSeed);
+    
+    // Convert hash to base32-like string
+    final code = StringBuffer();
+    for (var i = 0; i < length; i++) {
+      code.write(chars[hash[i] % chars.length]);
+    }
+    
+    return code.toString();
+  }
+  
+  List<int> _generateHash(String input) {
+    // Simple hash function that produces consistent results
+    final bytes = utf8.encode(input);
+    final digest = sha256.convert(bytes);
+    return digest.bytes.sublist(0, 6); // Take first 6 bytes for our code
+  }
+  
   String _generateRandomString(int length) {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Removed similar looking characters
+    final random = Random.secure();
     return String.fromCharCodes(
       Iterable.generate(
         length,
-        (_) => chars.codeUnitAt((chars.length * DateTime.now().millisecond) % chars.length),
+        (_) => chars.codeUnitAt(random.nextInt(chars.length)),
       ),
     );
   }
